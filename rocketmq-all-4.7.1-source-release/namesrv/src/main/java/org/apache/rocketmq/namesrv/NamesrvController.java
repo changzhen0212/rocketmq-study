@@ -74,27 +74,28 @@ public class NamesrvController {
         );
         this.configuration.setStorePathFromConfig(this.namesrvConfig, "configStorePath");
     }
-    //K1 NameController初始化
+    //K1 NameController 初始化
     public boolean initialize() {
-        //加载KV配置
+        // * 加载KV配置
         this.kvConfigManager.load();
-        //创建NettyServer网络处理对象
+        // * 创建NettyServer网络处理对象, 响应broker和客户端的请求
         this.remotingServer = new NettyRemotingServer(this.nettyServerConfig, this.brokerHousekeepingService);
-        //Netty服务器的工作线程池
+        // * Netty服务器的工作线程池
         this.remotingExecutor =
             Executors.newFixedThreadPool(nettyServerConfig.getServerWorkerThreads(), new ThreadFactoryImpl("RemotingExecutorThread_"));
-        //注册Processor，把remotingExecutor注入到remotingServer中
+        // * 注册Processor，把remotingExecutor注入到remotingServer中
         this.registerProcessor();
 
-        //开启定时任务:每隔10s扫描一次Broker,移除不活跃的Broker
+        // # 开启定时任务:每隔10s扫描一次Broker,移除不活跃的Broker
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
             public void run() {
+                // # routeInfoManager 路由管理, 心跳,注册,请求等
                 NamesrvController.this.routeInfoManager.scanNotActiveBroker();
             }
         }, 5, 10, TimeUnit.SECONDS);
-        //开启定时任务:每隔10min打印一次KV配置
+        // * 开启定时任务:每隔10min打印一次KV配置
         this.scheduledExecutorService.scheduleAtFixedRate(new Runnable() {
 
             @Override
@@ -102,7 +103,7 @@ public class NamesrvController {
                 NamesrvController.this.kvConfigManager.printAllPeriodically();
             }
         }, 1, 10, TimeUnit.MINUTES);
-        //TLS是一个安全传输层协议，相关参数只能用JVM指令注入。不许太多关注。
+        // * TLS是一个安全传输层协议，相关参数只能用JVM指令注入。不许太多关注。
         if (TlsSystemConfig.tlsMode != TlsMode.DISABLED) {
             // Register a listener to reload SslContext
             try {
@@ -150,7 +151,7 @@ public class NamesrvController {
             this.remotingServer.registerDefaultProcessor(new ClusterTestRequestProcessor(this, namesrvConfig.getProductEnvName()),
                 this.remotingExecutor);
         } else {
-            //NettyServer接收到的网络请求，就会由这个组件来处理。
+            // * NettyServer接收到的网络请求，就会由这个组件来处理。
             this.remotingServer.registerDefaultProcessor(new DefaultRequestProcessor(this), this.remotingExecutor);
         }
     }

@@ -184,11 +184,11 @@ public class BrokerController {
         this.nettyClientConfig = nettyClientConfig;
         this.messageStoreConfig = messageStoreConfig;
         //K2 Broker的各种功能对应的组件。
-        // * 管理consumer消费offset
+        // ! 管理consumer消费offset
         this.consumerOffsetManager = new ConsumerOffsetManager(this);
-        // * 管理Topic配置
+        // ! 管理Topic配置
         this.topicConfigManager = new TopicConfigManager(this);
-        // * 处理Consumer拉取消息的请求的
+        // ! 重要组件 处理Consumer拉取消息的请求的
         this.pullMessageProcessor = new PullMessageProcessor(this);
         this.pullRequestHoldService = new PullRequestHoldService(this);
         this.messageArrivingListener = new NotifyMessageArrivingListener(this.pullRequestHoldService);
@@ -272,7 +272,7 @@ public class BrokerController {
                 log.error("Failed to initialize", e);
             }
         }
-        // * 加载磁盘文件
+        // # 加载磁盘文件. load实现类,把配置文件读到内存等...
         result = result && this.messageStore.load();
         //K2 Broker的Netty组件。注意，Broker需要既是服务端(接收Producer和Consumer的请求)，又是客户端(要往NameServer和Producer发送请求)。
         if (result) {
@@ -867,7 +867,7 @@ public class BrokerController {
     public String getBrokerAddr() {
         return this.brokerConfig.getBrokerIP1() + ":" + this.nettyServerConfig.getListenPort();
     }
-    //BrokerController核心的启动方法
+    // ! BrokerController核心的启动方法
     public void start() throws Exception {
         // * 启动核心的消息存储组件
         if (this.messageStore != null) {
@@ -913,14 +913,15 @@ public class BrokerController {
             @Override
             public void run() {
                 try {
+                    // ! registerBrokerAll broker注册
                     BrokerController.this.registerBrokerAll(true, false, brokerConfig.isForceRegister());
                 } catch (Throwable e) {
                     log.error("registerBrokerAll Exception", e);
                 }
             }
-            //这个任务间隔时间默认是30秒
+            // * 这个任务间隔时间默认是30秒
         }, 1000 * 10, Math.max(10000, Math.min(brokerConfig.getRegisterNameServerPeriod(), 60000)), TimeUnit.MILLISECONDS);
-        //也是启动一些功能组件
+        // * 也是启动一些功能组件
         if (this.brokerStatsManager != null) {
             this.brokerStatsManager.start();
         }
@@ -979,6 +980,7 @@ public class BrokerController {
     private void doRegisterBrokerAll(boolean checkOrderConfig, boolean oneway,
         TopicConfigSerializeWrapper topicConfigWrapper) {
         // ? 为什么返回的是个List？这就是因为Broker是向所有的NameServer进行注册。
+        // ! registerBrokerAll
         List<RegisterBrokerResult> registerBrokerResultList = this.brokerOuterAPI.registerBrokerAll(
             this.brokerConfig.getBrokerClusterName(),
             this.getBrokerAddr(),
@@ -992,6 +994,7 @@ public class BrokerController {
             this.brokerConfig.isCompressedRegister());
         // * 如果注册结果的数量大于0，那么就对结果进行处理
         if (registerBrokerResultList.size() > 0) {
+            // # 只处理一个结果,其他的不不管, 体现出nameserver的无状态
             RegisterBrokerResult registerBrokerResult = registerBrokerResultList.get(0);
             if (registerBrokerResult != null) {
                 // * 主节点地址
@@ -1015,6 +1018,7 @@ public class BrokerController {
         final int timeoutMills) {
 
         TopicConfigSerializeWrapper topicConfigWrapper = this.getTopicConfigManager().buildTopicConfigSerializeWrapper();
+        // # broker要不要注册,是由nameserver决定的
         List<Boolean> changeList = brokerOuterAPI.needRegister(clusterName, brokerAddr, brokerName, brokerId, topicConfigWrapper, timeoutMills);
         boolean needRegister = false;
         for (Boolean changed : changeList) {

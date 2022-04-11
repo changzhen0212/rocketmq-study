@@ -61,7 +61,7 @@ public class BrokerStartup {
 
     public static BrokerController start(BrokerController controller) {
         try {
-            //K1 Controller启动
+            //K1 Controller启动核心方法
             controller.start();
 
             String tip = "The broker[" + controller.getBrokerConfig().getBrokerName() + ", "
@@ -107,9 +107,11 @@ public class BrokerStartup {
             if (null == commandLine) {
                 System.exit(-1);
             }
-            //K1 Broker的核心配置信息
+            //K1 Broker的核心配置信息 nameserver只做服务端, broker既要做客户端又要做服务端,
             final BrokerConfig brokerConfig = new BrokerConfig();
+            // # 普通消息是做服务端
             final NettyServerConfig nettyServerConfig = new NettyServerConfig();
+            // # 事务消息做客户端, 向producer请求
             final NettyClientConfig nettyClientConfig = new NettyClientConfig();
             // * TLS安全相关
             nettyClientConfig.setUseTLS(Boolean.parseBoolean(System.getProperty(TLS_ENABLE,
@@ -215,7 +217,7 @@ public class BrokerStartup {
             MixAll.printObjectProperties(log, nettyServerConfig);
             MixAll.printObjectProperties(log, nettyClientConfig);
             MixAll.printObjectProperties(log, messageStoreConfig);
-            // * 创建Controller
+            // ! 创建Controller
             final BrokerController controller = new BrokerController(
                 brokerConfig,
                 nettyServerConfig,
@@ -223,13 +225,13 @@ public class BrokerStartup {
                 messageStoreConfig);
             // remember all configs to prevent discard
             controller.getConfiguration().registerConfig(properties);
-            //初始化 注意从中理清楚Broker的组件结构
+            // ! 初始化 注意从中理清楚Broker的组件结构
             boolean initResult = controller.initialize();
             if (!initResult) {
                 controller.shutdown();
                 System.exit(-3);
             }
-            //优雅关闭。释放资源
+            // * 优雅关闭。释放资源
             Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
                 private volatile boolean hasShutdown = false;
                 private AtomicInteger shutdownTimes = new AtomicInteger(0);
