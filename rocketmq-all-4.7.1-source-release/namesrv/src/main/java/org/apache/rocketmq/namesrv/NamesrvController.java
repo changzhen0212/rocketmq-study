@@ -156,9 +156,9 @@ public class NamesrvController {
     }
 
     public void start() throws Exception {
-        //启动remotingServer。这个remotingServer就是用来响应客户端请求的。
+        // ! 启动remotingServer。这个remotingServer就是用来响应客户端请求的。进入start()实现
         this.remotingServer.start();
-        //这里是跟踪检查tls相关的配置文件。
+        // * 这里是跟踪检查tls相关的配置文件。
         if (this.fileWatchService != null) {
             this.fileWatchService.start();
         }

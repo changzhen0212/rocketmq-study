@@ -195,7 +195,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
 
         prepareSharableHandlers();
         //K1 Netty服务启动的核心流程
-        //主要核心是基于Netty的API去配置和启动一个Netty网络服务器。
+        // * 主要核心是基于Netty的API去配置和启动一个Netty网络服务器。
         ServerBootstrap childHandler =
             this.serverBootstrap.group(this.eventLoopGroupBoss, this.eventLoopGroupSelector)
                 .channel(useEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
@@ -206,8 +206,8 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
                 .childOption(ChannelOption.SO_SNDBUF, nettyServerConfig.getServerSocketSndBufSize())
                 .childOption(ChannelOption.SO_RCVBUF, nettyServerConfig.getServerSocketRcvBufSize())
                 .localAddress(new InetSocketAddress(this.nettyServerConfig.getListenPort()))
-                //Netty服务收到一个请求，那么就会依次使用下面的处理器来处理请求。
-                //serverHandler是负责最关键的网络请求处理的
+                // * Netty服务收到一个请求，那么就会依次使用下面的处理器来处理请求。
+                // * serverHandler是负责最关键的网络请求处理的
                 .childHandler(new ChannelInitializer<SocketChannel>() {
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
@@ -226,7 +226,7 @@ public class NettyRemotingServer extends NettyRemotingAbstract implements Remoti
         if (nettyServerConfig.isServerPooledByteBufAllocatorEnable()) {
             childHandler.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         }
-        //真正启动
+        // * 真正启动netty
         try {
             ChannelFuture sync = this.serverBootstrap.bind().sync();
             InetSocketAddress addr = (InetSocketAddress) sync.channel().localAddress();

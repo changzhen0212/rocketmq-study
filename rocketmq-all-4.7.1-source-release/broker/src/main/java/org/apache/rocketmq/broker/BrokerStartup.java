@@ -55,6 +55,7 @@ public class BrokerStartup {
     public static InternalLogger log;
 
     public static void main(String[] args) {
+        // ! 步进createBrokerController， 再步进start
         start(createBrokerController(args));
     }
 
@@ -110,19 +111,19 @@ public class BrokerStartup {
             final BrokerConfig brokerConfig = new BrokerConfig();
             final NettyServerConfig nettyServerConfig = new NettyServerConfig();
             final NettyClientConfig nettyClientConfig = new NettyClientConfig();
-            //TLS安全相关
+            // * TLS安全相关
             nettyClientConfig.setUseTLS(Boolean.parseBoolean(System.getProperty(TLS_ENABLE,
                 String.valueOf(TlsSystemConfig.tlsMode == TlsMode.ENFORCING))));
-            //Netty服务端的监听端口10911
+            // * Netty服务端的监听端口10911
             nettyServerConfig.setListenPort(10911);
             //K2 这个明显是Broker用来存储消息的一些配置信息。
             final MessageStoreConfig messageStoreConfig = new MessageStoreConfig();
-            //如果是SLAVE，会设置一个参数。这参数干嘛的，可以去官网查查。
+            // * 如果是SLAVE，会设置一个参数。这参数干嘛的，可以去官网查查。
             if (BrokerRole.SLAVE == messageStoreConfig.getBrokerRole()) {
                 int ratio = messageStoreConfig.getAccessMessageInMemoryMaxRatio() - 10;
                 messageStoreConfig.setAccessMessageInMemoryMaxRatio(ratio);
             }
-            //这段代码就比较熟悉了。处理命令行参数，最后全部打印出来。
+            // * 这段代码就比较熟悉了。处理命令行参数，最后全部打印出来。
             if (commandLine.hasOption('c')) {
                 String file = commandLine.getOptionValue('c');
                 if (file != null) {
@@ -141,7 +142,7 @@ public class BrokerStartup {
                     in.close();
                 }
             }
-            //填充brokerConfig
+            // * 填充brokerConfig
             MixAll.properties2Object(ServerUtil.commandLine2Properties(commandLine), brokerConfig);
 
             if (null == brokerConfig.getRocketmqHome()) {
@@ -163,7 +164,7 @@ public class BrokerStartup {
                     System.exit(-3);
                 }
             }
-            //判断集群角色。通过BrokerId判断主从
+            // * 判断集群角色。通过BrokerId判断主从
             switch (messageStoreConfig.getBrokerRole()) {
                 case ASYNC_MASTER:
                 case SYNC_MASTER:
@@ -185,14 +186,14 @@ public class BrokerStartup {
             }
 
             messageStoreConfig.setHaListenPort(nettyServerConfig.getListenPort() + 1);
-            //日志相关的代码。可以稍后再关注
+            // * 日志相关的代码。可以稍后再关注
            LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
             JoranConfigurator configurator = new JoranConfigurator();
             configurator.setContext(lc);
             lc.reset();
-            //注意下这里又是个神奇的配置文件指定。
+            // * 注意下这里又是个神奇的配置文件指定。
             configurator.doConfigure(brokerConfig.getRocketmqHome() + "/conf/logback_broker.xml");
-            // -p和-m参数都只打印配置
+            // * -p和-m参数都只打印配置
             if (commandLine.hasOption('p')) {
                 InternalLogger console = InternalLoggerFactory.getLogger(LoggerName.BROKER_CONSOLE_NAME);
                 MixAll.printObjectProperties(console, brokerConfig);
@@ -208,13 +209,13 @@ public class BrokerStartup {
                 MixAll.printObjectProperties(console, messageStoreConfig, true);
                 System.exit(0);
             }
-            //又是参数打印
+            // * 又是参数打印
             log = InternalLoggerFactory.getLogger(LoggerName.BROKER_LOGGER_NAME);
             MixAll.printObjectProperties(log, brokerConfig);
             MixAll.printObjectProperties(log, nettyServerConfig);
             MixAll.printObjectProperties(log, nettyClientConfig);
             MixAll.printObjectProperties(log, messageStoreConfig);
-            //创建Controllerg
+            // * 创建Controller
             final BrokerController controller = new BrokerController(
                 brokerConfig,
                 nettyServerConfig,
