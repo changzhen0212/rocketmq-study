@@ -41,6 +41,10 @@ mvn clean install -Dmaven.test.skip=true
 
 这个环境变量可以在机器上配置，跟配置`JAVA_HOME`环境变量一样。也可以在IDEA的运行环境中配置。目录指向源码目录即可。
 
+
+
+环境变量：
+
 ```properties
 ROCKETMQ_HOME=D:\idea_source_projects\rocketmq-study\rocketmq-all-4.7.1-source-release
 ```
@@ -59,11 +63,23 @@ ROCKETMQ_HOME=D:\idea_source_projects\rocketmq-study\rocketmq-all-4.7.1-source-r
 
 启动Broker时，同样需要`ROCETMQ_HOME`环境变量，并且还需要配置一个`-c` 参数，指向`broker.conf`配置文件。
 
+
+
+环境变量：
+
 ```properties
 ROCKETMQ_HOME=D:\idea_source_projects\rocketmq-study\rocketmq-all-4.7.1-source-release
+```
 
+
+
+指向配置：
+
+```properties
 -c D:\idea_source_projects\rocketmq-study\rocketmq-all-4.7.1-source-release\conf\broker.conf
 ```
+
+
 
 
 
@@ -90,4 +106,25 @@ ROCKETMQ_HOME=D:\idea_source_projects\rocketmq-study\rocketmq-all-4.7.1-source-r
 在测试源码中，需要指定`NameServer`地址, 有两种指定方式:
 
 - 一种是配置一个`NAMESRV_ADDR`的环境变量。
-- 另一种是在源码中指定。我们可以在源码中加一行代码指定`NameServer`
+
+- 另一种是在源码中加一行代码指定`NameServer`
+
+  ```java
+  producer.setNamesrvAddr("127.0.0.1:9876");
+  ```
+
+  
+
+### 消费消息
+
+使用同一模块下的`org.apache.rocketmq.example.quickstart.Consumer`类来消费消息。运行时同样需要指定`NameServer`地址
+
+
+
+```java
+consumer.setNamesrvAddr("127.0.0.1:9876");
+```
+
+
+
+这样整个调试环境就搭建好了。
