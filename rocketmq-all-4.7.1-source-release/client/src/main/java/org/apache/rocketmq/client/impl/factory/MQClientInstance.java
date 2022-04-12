@@ -241,6 +241,7 @@ public class MQClientInstance {
                     this.pullMessageService.start();
                     // Start rebalance service
                     //K2 客户端负载均衡
+                    // ! 进入 RebalanceService#run方法
                     this.rebalanceService.start();
                     // Start push service
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);

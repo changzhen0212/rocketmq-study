@@ -869,7 +869,7 @@ public class BrokerController {
     }
     // ! BrokerController核心的启动方法
     public void start() throws Exception {
-        // * 启动核心的消息存储组件
+        // ! 启动核心的消息存储组件, 消息分发跟进, 进入MessageStore实现类 DefaultMessageStore 的start方法
         if (this.messageStore != null) {
             this.messageStore.start();
         }

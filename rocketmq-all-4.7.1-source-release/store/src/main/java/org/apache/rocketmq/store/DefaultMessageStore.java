@@ -83,7 +83,7 @@ public class DefaultMessageStore implements MessageStore {
     private final IndexService indexService;
     //MappedFile分配服务
     private final AllocateMappedFileService allocateMappedFileService;
-    //commitLog消息分发，根据CommitLog文件来构建ConsumeQueue和indexFile文件。
+    // # commitLog消息分发，根据CommitLog文件来构建ConsumeQueue和indexFile文件。
     private final ReputMessageService reputMessageService;
     //存储HA机制
     private final HAService haService;
@@ -268,7 +268,7 @@ public class DefaultMessageStore implements MessageStore {
             }
             log.info("[SetReputOffset] maxPhysicalPosInLogicQueue={} clMinOffset={} clMaxOffset={} clConfirmedOffset={}",
                     maxPhysicalPosInLogicQueue, this.commitLog.getMinOffset(), this.commitLog.getMaxOffset(), this.commitLog.getConfirmOffset());
-            //K2 Broker启动时会启动一个线程来更新ConsumerQueue索引文件。
+            //K2 Broker启动时会启动一个线程来更新ConsumerQueue索引文件。 线程进入run方法
             this.reputMessageService.setReputFromOffset(maxPhysicalPosInLogicQueue);
             this.reputMessageService.start();
 
@@ -496,7 +496,7 @@ public class DefaultMessageStore implements MessageStore {
         }
 
         long beginTime = this.getSystemClock().now();
-        //我们跟踪下这个最典型的消息写入commitlog的方法
+        // ! 我们跟踪下这个最典型的消息写入commitlog的方法
         PutMessageResult result = this.commitLog.putMessage(msg);
         long elapsedTime = this.getSystemClock().now() - beginTime;
         if (elapsedTime > 500) {
@@ -1509,6 +1509,7 @@ public class DefaultMessageStore implements MessageStore {
     //K2 将commitLog写入的事件转发到ComsumeQueue和IndexFile
     public void doDispatch(DispatchRequest req) {
         for (CommitLogDispatcher dispatcher : this.dispatcherList) {
+            // ! 进入实现方法 CommitLogDispatcherBuildConsumeQueue 和 CommitLogDispatcherBuildIndex
             dispatcher.dispatch(req);
         }
     }
@@ -1931,7 +1932,7 @@ public class DefaultMessageStore implements MessageStore {
             return this.reputFromOffset < DefaultMessageStore.this.commitLog.getMaxOffset();
         }
 
-        //消息分发
+        // # 消息分发
         private void doReput() {
             if (this.reputFromOffset < DefaultMessageStore.this.commitLog.getMinOffset()) {
                 log.warn("The reputFromOffset={} is smaller than minPyOffset={}, this usually indicate that the dispatch behind too much and the commitlog has expired.",
@@ -1951,14 +1952,14 @@ public class DefaultMessageStore implements MessageStore {
                         this.reputFromOffset = result.getStartOffset();
 
                         for (int readSize = 0; readSize < result.getSize() && doNext; ) {
-                            //从CommitLog中获取一个DispatchRequest,拿到一份需要进行转发的消息，也就是从commitlog中读取的。
+                            // # 从CommitLog中获取一个DispatchRequest,拿到一份需要进行转发的消息，也就是从commitlog中读取的。
                             DispatchRequest dispatchRequest =
                                     DefaultMessageStore.this.commitLog.checkMessageAndReturnSize(result.getByteBuffer(), false, false);
                             int size = dispatchRequest.getBufferSize() == -1 ? dispatchRequest.getMsgSize() : dispatchRequest.getBufferSize();
 
                             if (dispatchRequest.isSuccess()) {
                                 if (size > 0) {
-                                    //分发CommitLog写入消息
+                                    // # 分发CommitLog写入消息
                                     DefaultMessageStore.this.doDispatch(dispatchRequest);
                                     //K2 长轮询： 如果有消息到了主节点，并且开启了长轮询。
                                     if (BrokerRole.SLAVE != DefaultMessageStore.this.getMessageStoreConfig().getBrokerRole()
@@ -2018,6 +2019,7 @@ public class DefaultMessageStore implements MessageStore {
             while (!this.isStopped()) {
                 try {
                     Thread.sleep(1);
+                    // ! 消息分发
                     this.doReput();
                 } catch (Exception e) {
                     DefaultMessageStore.log.warn(this.getServiceName() + " service has exception. ", e);

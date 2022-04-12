@@ -50,6 +50,7 @@ public class Producer {
         /*
          * Launch the instance.
          */
+        // ! 启动实例
         producer.start();
 
         for (int i = 0; i < 2; i++) {
