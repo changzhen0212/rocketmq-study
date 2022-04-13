@@ -193,7 +193,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
         return result;
     }
 
-    //顺序处理消息
+    // # 顺序处理消息
     @Override
     public void submitConsumeRequest(
         final List<MessageExt> msgs,
@@ -201,6 +201,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
         final MessageQueue messageQueue,
         final boolean dispathToConsume) {
         if (dispathToConsume) {
+            // ! 进入 ConsumeRequest#run()
             ConsumeRequest consumeRequest = new ConsumeRequest(processQueue, messageQueue);
             this.consumeExecutor.submit(consumeRequest);
         }
@@ -412,7 +413,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
         public MessageQueue getMessageQueue() {
             return messageQueue;
         }
-        //顺序消息消费线程
+        // # 顺序消息消费线程
         @Override
         public void run() {
             if (this.processQueue.isDropped()) {
@@ -421,7 +422,7 @@ public class ConsumeMessageOrderlyService implements ConsumeMessageService {
             }
 
             final Object objLock = messageQueueLock.fetchLockObject(this.messageQueue);
-            synchronized (objLock) {//通过加锁，将并发的消息顺序进行消费。消息处理的方式没什么特别。
+            synchronized (objLock) { // # 通过加锁，将并发的消息顺序进行消费。消息处理的方式没什么特别。
                 if (MessageModel.BROADCASTING.equals(ConsumeMessageOrderlyService.this.defaultMQPushConsumerImpl.messageModel())
                     || (this.processQueue.isLocked() && !this.processQueue.isLockExpired())) {
                     final long beginTime = System.currentTimeMillis();

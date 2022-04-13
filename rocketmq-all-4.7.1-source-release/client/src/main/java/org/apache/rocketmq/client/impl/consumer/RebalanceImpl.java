@@ -238,7 +238,7 @@ public abstract class RebalanceImpl {
     //K2 客户端负载：对Topic进行负载的过程
     private void rebalanceByTopic(final String topic, final boolean isOrder) {
         switch (messageModel) {
-            //广播模式，不需要进行负载。每个消费者都要消费。只需要更新负载信息。
+            // # 广播模式，不需要进行负载。每个消费者都要消费。只需要更新负载信息。
             case BROADCASTING: {
                 Set<MessageQueue> mqSet = this.topicSubscribeInfoTable.get(topic);
                 if (mqSet != null) {
@@ -258,9 +258,9 @@ public abstract class RebalanceImpl {
             }
             //K2 客户端负载：集群模式负载方法
             case CLUSTERING: {
-                //订阅的主题
+                // # 订阅的主题
                 Set<MessageQueue> mqSet = this.topicSubscribeInfoTable.get(topic);
-                //客户端ID
+                // # 客户端ID
                 List<String> cidAll = this.mQClientFactory.findConsumerIdList(topic, consumerGroup);
                 if (null == mqSet) {
                     if (!topic.startsWith(MixAll.RETRY_GROUP_TOPIC_PREFIX)) {
@@ -275,15 +275,15 @@ public abstract class RebalanceImpl {
                 if (mqSet != null && cidAll != null) {
                     List<MessageQueue> mqAll = new ArrayList<MessageQueue>();
                     mqAll.addAll(mqSet);
-                    //排序后才能保证消费者负载策略相对稳定。
+                    // # 排序后才能保证消费者负载策略相对稳定。
                     Collections.sort(mqAll);
                     Collections.sort(cidAll);
-                    //MessageQueue的负载策略，有五种实现类
+                    // ! MessageQueue的负载策略，有五种实现类
                     AllocateMessageQueueStrategy strategy = this.allocateMessageQueueStrategy;
 
                     List<MessageQueue> allocateResult = null;
                     try {
-                        //按负载策略进行分配，返回当前消费者实际订阅的MessageQueue集合。
+                        // # 按负载策略进行分配，返回当前消费者实际订阅的MessageQueue集合。
                         allocateResult = strategy.allocate(
                             this.consumerGroup,
                             this.mQClientFactory.getClientId(),
@@ -306,7 +306,7 @@ public abstract class RebalanceImpl {
                             "rebalanced result changed. allocateMessageQueueStrategyName={}, group={}, topic={}, clientId={}, mqAllSize={}, cidAllSize={}, rebalanceResultSize={}, rebalanceResultSet={}",
                             strategy.getName(), consumerGroup, topic, this.mQClientFactory.getClientId(), mqSet.size(), cidAll.size(),
                             allocateResultSet.size(), allocateResultSet);
-                        //如果负载情况有变化，需要通知Broker
+                        // ! 如果负载情况有变化，需要通知Broker
                         this.messageQueueChanged(topic, mqSet, allocateResultSet);
                     }
                 }

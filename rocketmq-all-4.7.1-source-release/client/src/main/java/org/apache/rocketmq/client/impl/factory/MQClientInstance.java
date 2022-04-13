@@ -238,10 +238,11 @@ public class MQClientInstance {
                     // Start various schedule tasks
                     this.startScheduledTask();
                     // Start pull service
+                    // ! 拉消息, 查看run方法
                     this.pullMessageService.start();
                     // Start rebalance service
                     //K2 客户端负载均衡
-                    // ! 进入 RebalanceService#run方法
+                    // ! 进入 RebalanceService #run方法
                     this.rebalanceService.start();
                     // Start push service
                     this.defaultMQProducer.getDefaultMQProducerImpl().start(false);
@@ -977,6 +978,7 @@ public class MQClientInstance {
             MQConsumerInner impl = entry.getValue();
             if (impl != null) {
                 try {
+                    // ! 进入实现方法
                     impl.doRebalance();
                 } catch (Throwable e) {
                     log.error("doRebalance exception", e);

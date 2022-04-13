@@ -93,9 +93,9 @@ public class PullMessageService extends ServiceThread {
 
         while (!this.isStopped()) {
             try {
-                //拉取消息的请求队列
+                // ! 拉取消息的请求队列
                 PullRequest pullRequest = this.pullRequestQueue.take();
-                //处理请求
+                // ! 处理请求
                 this.pullMessage(pullRequest);
             } catch (InterruptedException ignored) {
             } catch (Exception e) {
